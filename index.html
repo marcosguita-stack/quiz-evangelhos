@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0b0b14" />
+<title>Quiz dos Evangelhos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  :root {
+    --bg-0: #07070d;
+    --bg-1: #0f1020;
+    --bg-2: #151631;
+    --card: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text: #eef0ff;
+    --muted: #9aa0c3;
+    --brand: #8b5cf6;
+    --brand-2: #6366f1;
+    --accent: #22d3ee;
+    --good: #10b981;
+    --bad: #ef4444;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  }
+  html, body {
+    min-height: 100%;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(139,92,246,0.18), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(34,211,238,0.12), transparent 55%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 60%, #060611);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+  body {
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    padding: 20px 16px 32px;
+  }
+  .app {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 2px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    font-size: 15px;
+  }
+  .brand .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--brand), var(--accent));
+    display: grid; place-items: center;
+    box-shadow: 0 10px 30px rgba(139,92,246,0.45);
+    color: white; font-size: 16px;
+  }
+  .pill {
+    font-size: 12px; color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+  }
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress {
+    flex: 1; height: 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress::after {
+    content: "";
+    position: absolute; inset: 0;
+    width: var(--p, 0%);
+    background: linear-gradient(90deg, var(--brand), var(--accent));
+    transition: width 0.4s ease;
+    border-radius: 999px;
+  }
+  .verse {
+    font-size: 18px;
+    line-height: 1.55;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    margin: 4px 0 0;
+    color: var(--text);
+  }
+  .verse::before {
+    content: "\201C";
+    font-family: Georgia, serif;
+    font-size: 46px;
+    line-height: 0;
+    vertical-align: -18px;
+    color: var(--brand);
+    margin-right: 6px;
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .options {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .opt {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--card-border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .opt:active { transform: scale(0.98); }
+  .opt .letter {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: grid; place-items: center;
+    background: rgba(139,92,246,0.18);
+    color: #d6ccff;
+    font-size: 13px;
+    border: 1px solid rgba(139,92,246,0.35);
+  }
+  .opt:hover { background: rgba(255,255,255,0.06); }
+  .opt.correct {
+    background: rgba(16,185,129,0.14);
+    border-color: rgba(16,185,129,0.5);
+    color: #d6ffee;
+  }
+  .opt.correct .letter {
+    background: rgba(16,185,129,0.25);
+    border-color: rgba(16,185,129,0.55);
+    color: #c4ffe3;
+  }
+  .opt.wrong {
+    background: rgba(239,68,68,0.14);
+    border-color: rgba(239,68,68,0.5);
+    color: #ffd9d9;
+  }
+  .opt.wrong .letter {
+    background: rgba(239,68,68,0.25);
+    border-color: rgba(239,68,68,0.55);
+    color: #ffc6c6;
+  }
+  .opt[disabled] { cursor: default; opacity: 0.92; }
+  .feedback {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    min-height: 20px;
+  }
+  .feedback strong { color: var(--text); }
+  .actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .btn {
+    appearance: none; border: 0;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    color: white;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(99,102,241,0.35);
+    transition: transform 0.1s ease, filter 0.2s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    box-shadow: none;
+    color: var(--text);
+  }
+  .hidden { display: none !important; }
+
+  /* Start screen */
+  .hero {
+    text-align: center;
+    padding: 28px 22px;
+  }
+  .hero h1 {
+    margin: 8px 0 10px;
+    font-size: 26px;
+    letter-spacing: 0.2px;
+    background: linear-gradient(135deg, #fff, #c7b8ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 18px;
+  }
+  .badges {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin-bottom: 22px;
+  }
+  .badge {
+    font-size: 12px; color: #d7d1ff;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.28);
+    padding: 6px 10px; border-radius: 999px;
+  }
+  .start-btn {
+    font-size: 16px; padding: 14px 22px;
+  }
+
+  /* Result screen */
+  .result-score {
+    font-size: 64px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--brand), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    line-height: 1;
+    margin-top: 10px;
+  }
+  .result-total { text-align: center; color: var(--muted); margin-top: 6px; font-size: 14px; }
+  .result-msg {
+    text-align: center;
+    margin: 16px 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .result-sub { text-align: center; color: var(--muted); font-size: 14px; }
+  .break-down {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .bd {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .bd .g { font-size: 13px; color: var(--muted); }
+  .bd .s { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  .row {
+    display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap;
+  }
+  @media (max-width: 380px) {
+    .verse { font-size: 16.5px; }
+    .hero h1 { font-size: 23px; }
+  }
+  /* Entry animation */
+  .fade-in { animation: fade 0.35s ease both; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <header class="top">
+      <div class="brand">
+        <div class="logo">✦</div>
+        <div>Quiz dos Evangelhos</div>
+      </div>
+      <div class="pill" id="topPill">20 versículos</div>
+    </header>
+
+    <!-- START SCREEN -->
+    <section id="start" class="card hero fade-in">
+      <h1>De qual evangelho é este versículo?</h1>
+      <p>Teste seu conhecimento com 20 versículos — 5 de cada evangelho — em ordem aleatória. Escolha entre Mateus, Marcos, Lucas e João.</p>
+      <div class="badges">
+        <span class="badge">Mateus</span>
+        <span class="badge">Marcos</span>
+        <span class="badge">Lucas</span>
+        <span class="badge">João</span>
+      </div>
+      <button class="btn start-btn" id="startBtn">Começar quiz</button>
+      <div class="footer" style="margin-top:18px;">Feito para jogar no celular • Compartilhe no grupo</div>
+    </section>
+
+    <!-- QUIZ SCREEN -->
+    <section id="quiz" class="hidden">
+      <div class="card" style="padding:14px 16px;">
+        <div class="progress-wrap">
+          <span id="qCount">1 / 20</span>
+          <div class="progress" id="progress" style="--p:5%"></div>
+          <span id="scoreLabel">0 pts</span>
+        </div>
+      </div>
+
+      <div class="card fade-in" id="qCard">
+        <div class="hint" id="refHint">Versículo</div>
+        <p class="verse" id="verseText"></p>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="actions">
+          <button class="btn hidden" id="nextBtn">Próximo →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section id="result" class="hidden">
+      <div class="card fade-in">
+        <div class="result-score" id="finalScore">0</div>
+        <div class="result-total" id="finalTotal">de 20 acertos</div>
+        <div class="result-msg" id="resultMsg">—</div>
+        <div class="result-sub" id="resultSub">—</div>
+        <div class="break-down" id="breakdown"></div>
+        <div class="row">
+          <button class="btn" id="restartBtn">Jogar novamente</button>
+          <button class="btn ghost" id="shareBtn">Compartilhar</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+  // ----------- Versículos (5 de cada evangelho) -----------
+  // Referências reais da Bíblia. Texto em português (versão livre fiel ao sentido).
+  const VERSES = [
+    // ========== MATEUS ==========
+    { g: "Mateus", ref: "Mateus 5:3",
+      t: "Bem-aventurados os pobres em espírito, porque deles é o Reino dos céus." },
+    { g: "Mateus", ref: "Mateus 6:9",
+      t: "Portanto, orai assim: Pai nosso, que estás nos céus, santificado seja o teu nome." },
+    { g: "Mateus", ref: "Mateus 11:28",
+      t: "Vinde a mim, todos os que estais cansados e sobrecarregados, e eu vos aliviarei." },
+    { g: "Mateus", ref: "Mateus 28:19",
+      t: "Portanto, ide, fazei discípulos de todas as nações, batizando-os em nome do Pai, do Filho e do Espírito Santo." },
+    { g: "Mateus", ref: "Mateus 7:7",
+      t: "Pedi, e dar-se-vos-á; buscai, e encontrareis; batei, e abrir-se-vos-á." },
+
+    // ========== MARCOS ==========
+    { g: "Marcos", ref: "Marcos 1:15",
+      t: "O tempo está cumprido, e o Reino de Deus está próximo; arrependei-vos e crede no evangelho." },
+    { g: "Marcos", ref: "Marcos 10:45",
+      t: "Pois o Filho do Homem não veio para ser servido, mas para servir e dar a sua vida em resgate por muitos." },
+    { g: "Marcos", ref: "Marcos 16:15",
+      t: "Ide por todo o mundo e pregai o evangelho a toda criatura." },
+    { g: "Marcos", ref: "Marcos 9:23",
+      t: "Tudo é possível ao que crê." },
+    { g: "Marcos", ref: "Marcos 8:36",
+      t: "Pois que aproveita ao homem ganhar o mundo inteiro e perder a sua alma?" },
+
+    // ========== LUCAS ==========
+    { g: "Lucas", ref: "Lucas 2:10-11",
+      t: "Não temais, porque eis aqui vos trago novas de grande alegria: hoje, na cidade de Davi, vos nasceu o Salvador, que é Cristo, o Senhor." },
+    { g: "Lucas", ref: "Lucas 15:7",
+      t: "Haverá maior alegria no céu por um pecador que se arrepende do que por noventa e nove justos que não necessitam de arrependimento." },
+    { g: "Lucas", ref: "Lucas 19:10",
+      t: "Porque o Filho do Homem veio buscar e salvar o que se havia perdido." },
+    { g: "Lucas", ref: "Lucas 23:34",
+      t: "Pai, perdoa-lhes, porque não sabem o que fazem." },
+    { g: "Lucas", ref: "Lucas 4:18",
+      t: "O Espírito do Senhor está sobre mim, pelo qual me ungiu para evangelizar os pobres; enviou-me a curar os quebrantados de coração." },
+
+    // ========== JOÃO ==========
+    { g: "João", ref: "João 1:1",
+      t: "No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus." },
+    { g: "João", ref: "João 3:16",
+      t: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna." },
+    { g: "João", ref: "João 14:6",
+      t: "Eu sou o caminho, e a verdade, e a vida; ninguém vem ao Pai senão por mim." },
+    { g: "João", ref: "João 11:25",
+      t: "Eu sou a ressurreição e a vida; quem crê em mim, ainda que esteja morto, viverá." },
+    { g: "João", ref: "João 8:12",
+      t: "Eu sou a luz do mundo; quem me segue não andará em trevas, mas terá a luz da vida." }
+  ];
+
+  const GOSPELS = ["Mateus", "Marcos", "Lucas", "João"];
+
+  // ----------- Estado -----------
+  let order = [];
+  let idx = 0;
+  let score = 0;
+  let answers = []; // { gospel, correct }
+
+  // ----------- Utilidades -----------
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ----------- DOM -----------
+  const el = (id) => document.getElementById(id);
+  const startSec = el("start");
+  const quizSec = el("quiz");
+  const resultSec = el("result");
+  const startBtn = el("startBtn");
+  const restartBtn = el("restartBtn");
+  const shareBtn = el("shareBtn");
+  const nextBtn = el("nextBtn");
+  const verseText = el("verseText");
+  const refHint = el("refHint");
+  const optionsBox = el("options");
+  const feedback = el("feedback");
+  const qCount = el("qCount");
+  const progress = el("progress");
+  const scoreLabel = el("scoreLabel");
+  const topPill = el("topPill");
+
+  startBtn.addEventListener("click", startQuiz);
+  restartBtn.addEventListener("click", startQuiz);
+  nextBtn.addEventListener("click", nextQuestion);
+  shareBtn.addEventListener("click", shareResult);
+
+  function startQuiz() {
+    order = shuffle(VERSES);
+    idx = 0; score = 0; answers = [];
+    startSec.classList.add("hidden");
+    resultSec.classList.add("hidden");
+    quizSec.classList.remove("hidden");
+    topPill.textContent = "20 versículos";
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = order[idx];
+    qCount.textContent = (idx + 1) + " / " + order.length;
+    progress.style.setProperty("--p", (((idx) / order.length) * 100) + "%");
+    scoreLabel.textContent = score + " pts";
+
+    refHint.textContent = "Versículo " + (idx + 1);
+    verseText.textContent = q.t;
+
+    optionsBox.innerHTML = "";
+    feedback.textContent = "";
+    nextBtn.classList.add("hidden");
+
+    const letters = ["A", "B", "C", "D"];
+    GOSPELS.forEach((gname, i) => {
+      const b = document.createElement("button");
+      b.className = "opt";
+      b.type = "button";
+      b.innerHTML = '<span class="letter">' + letters[i] + '</span><span>' + gname + '</span>';
+      b.addEventListener("click", () => pick(b, gname, q));
+      optionsBox.appendChild(b);
+    });
+
+    // anima o card
+    const card = el("qCard");
+    card.classList.remove("fade-in");
+    // force reflow
+    void card.offsetWidth;
+    card.classList.add("fade-in");
+  }
+
+  function pick(btn, chosen, q) {
+    // desabilita todos
+    const buttons = optionsBox.querySelectorAll(".opt");
+    buttons.forEach(b => b.setAttribute("disabled", "true"));
+
+    const correct = chosen === q.g;
+    if (correct) score += 1;
+    answers.push({ gospel: q.g, correct });
+
+    // marca respostas
+    buttons.forEach(b => {
+      const label = b.querySelector("span:last-child").textContent;
+      if (label === q.g) b.classList.add("correct");
+      if (label === chosen && !correct) b.classList.add("wrong");
+    });
+
+    feedback.innerHTML = correct
+      ? "✅ Correto! <strong>" + q.ref + "</strong>"
+      : "❌ Era <strong>" + q.g + "</strong> — " + q.ref;
+
+    scoreLabel.textContent = score + " pts";
+    progress.style.setProperty("--p", (((idx + 1) / order.length) * 100) + "%");
+
+    if (idx + 1 >= order.length) {
+      nextBtn.textContent = "Ver resultado →";
+    } else {
+      nextBtn.textContent = "Próximo →";
+    }
+    nextBtn.classList.remove("hidden");
+  }
+
+  function nextQuestion() {
+    if (idx + 1 >= order.length) {
+      showResult();
+      return;
+    }
+    idx += 1;
+    renderQuestion();
+  }
+
+  function showResult() {
+    quizSec.classList.add("hidden");
+    resultSec.classList.remove("hidden");
+
+    el("finalScore").textContent = score;
+    el("finalTotal").textContent = "de " + order.length + " acertos";
+
+    const pct = Math.round((score / order.length) * 100);
+    let msg, sub;
+    if (pct === 100) { msg = "Perfeito! 🏆"; sub = "Você conhece os evangelhos como poucos."; }
+    else if (pct >= 85) { msg = "Excelente! 🌟"; sub = "Conhecimento de mestre da Palavra."; }
+    else if (pct >= 70) { msg = "Muito bom! 👏"; sub = "Você está quase lá — revise alguns trechos."; }
+    else if (pct >= 50) { msg = "Bom começo! 📖"; sub = "Volte aos evangelhos e jogue de novo."; }
+    else { msg = "Hora de estudar 🙏"; sub = "Abra sua Bíblia — dos 4 evangelhos há muito a descobrir."; }
+    el("resultMsg").textContent = msg;
+    el("resultSub").textContent = sub;
+
+    // breakdown por evangelho
+    const by = {};
+    GOSPELS.forEach(g => by[g] = { total: 0, ok: 0 });
+    answers.forEach(a => { by[a.gospel].total += 1; if (a.correct) by[a.gospel].ok += 1; });
+    const bd = el("breakdown");
+    bd.innerHTML = "";
+    GOSPELS.forEach(g => {
+      const d = document.createElement("div");
+      d.className = "bd";
+      d.innerHTML = '<div class="g">' + g + '</div><div class="s">' + by[g].ok + ' / ' + by[g].total + '</div>';
+      bd.appendChild(d);
+    });
+  }
+
+  async function shareResult() {
+    const text = "Fiz " + score + "/" + order.length + " no Quiz dos Evangelhos! 📖✨ Teste você também:";
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Quiz dos Evangelhos", text, url });
+      } else {
+        await navigator.clipboard.writeText(text + " " + url);
+        shareBtn.textContent = "Copiado!";
+        setTimeout(() => shareBtn.textContent = "Compartilhar", 1500);
+      }
+    } catch (e) {
+      // usuário cancelou — sem ação
+    }
+  }
+</script>
+</body>
+</html>
